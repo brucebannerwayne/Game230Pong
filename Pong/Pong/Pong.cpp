@@ -26,7 +26,7 @@ public:
 	float moveSpeed;
 	sf::Sprite sprite;
 
-	bool UpdateBall(float deltaTime, sf::Vector2f padPosition, sf::Vector2f padSize, bool isLeft) {
+	bool UpdateBall(float deltaTime, sf::Vector2f padPosition, sf::Vector2f padSize) {
 		auto position = this->shape.getPosition();
 		auto center = this->shape.getPosition() + sf::Vector2f(this->shape.getRadius(), this->shape.getRadius());
 		auto padCenter = sf::Vector2f(padPosition.x + padSize.x / 2, padPosition.y + padSize.y / 2);
@@ -78,15 +78,39 @@ public:
 				dir.x = -abs(dir.x);
 				dir.y = -dir.y;
 				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
+				if (moveSpeed >= 400) {
+					moveSpeed = 400;
 				}
 				this->velocity = dir * moveSpeed;
 				impact.play();
 				std::cout << dir.x <<","<< dir.y << std::endl;
 				return true;
 			}
-			else if(position.x >= WIDTH - this->shape.getRadius() * 2.0f) {
+			else if ((center.y >= padPosition.y - this->shape.getRadius() && center.y <= padPosition.y) || (center.y <= padPosition.y + padSize.y + this->shape.getRadius() && center.y >= padPosition.y + padSize.y)) {
+				if (pow(center.x - padPosition.x, 2) + pow(center.y - padPosition.y, 2) <= pow(this->shape.getRadius(), 2)) {
+					dir = Normalize(dir);
+					dir.x = -abs(dir.x);
+					dir.y = -dir.y;
+					moveSpeed += 10;
+					if (moveSpeed >= 400) {
+						moveSpeed = 400;
+					}
+					impact.play();
+					this->velocity = dir * moveSpeed;
+				}
+				else if (pow(center.x - padPosition.x, 2) + pow(center.y - padPosition.y - padSize.y, 2) <= pow(this->shape.getRadius(), 2)) {
+					dir = Normalize(dir);
+					dir.x = -abs(dir.x);
+					dir.y = -dir.y;
+					moveSpeed += 10;
+					if (moveSpeed >= 400) {
+						moveSpeed = 400;
+					}
+					impact.play();
+					this->velocity = dir * moveSpeed;
+				}
+			}
+			else if(center.x >= WIDTH){
 				return false;
 			}
 		}
@@ -96,63 +120,42 @@ public:
 				dir.x = abs(dir.x);
 				dir.y = -dir.y;
 				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
+				if (moveSpeed >= 400) {
+					moveSpeed = 400;
 				}
 				this->velocity = dir * moveSpeed;
 				impact.play();
 				std::cout << dir.x << "," << dir.y << std::endl;
 			}
-			else if(position.x < -this->shape.getRadius()){
+			else if ((center.y >= padPosition.y - this->shape.getRadius() && center.y <= padPosition.y) || (center.y <= padPosition.y + padSize.y + this->shape.getRadius() && center.y >= padPosition.y + padSize.y)) {
+				if (pow(center.x - padSize.x, 2) + pow(center.y - padPosition.y, 2) <= pow(this->shape.getRadius(), 2)) {
+					dir = Normalize(dir);
+					dir.x = abs(dir.x);
+					dir.y = -dir.y;
+					moveSpeed += 10;
+					if (moveSpeed >= 400) {
+						moveSpeed = 400;
+					}
+					impact.play();
+					this->velocity = dir * moveSpeed;
+				}
+				else if (pow(center.x - padSize.x, 2) + pow(center.y - padPosition.y - padSize.y, 2) <= pow(this->shape.getRadius(), 2)) {
+					dir = Normalize(dir);
+					dir.x = abs(dir.x);
+					dir.y = -dir.y;
+					moveSpeed += 10;
+					if (moveSpeed >= 400) {
+						moveSpeed = 400;
+					}
+					impact.play();
+					this->velocity = dir * moveSpeed;
+				}
+			}
+			else if(center.x <= 0){
 				return false;
 			}
 		}
-		if (isLeft) {
-			if (pow(center.x - padSize.x, 2) + pow(center.y - padPosition.y, 2) <= pow(this->shape.getRadius(), 2)) {
-				dir = Normalize(dir);
-				dir.x = abs(dir.x);
-				dir.y = -dir.y;
-				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
-				}
-				this->velocity = dir * moveSpeed;
-			}
-			else if (pow(center.x - padSize.x, 2) + pow(center.y - padPosition.y - padSize.y, 2) <= pow(this->shape.getRadius(), 2)) {
-				dir = Normalize(dir);
-				dir.x = abs(dir.x);
-				dir.y = -dir.y;
-				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
-				}
-				this->velocity = dir * moveSpeed;
-			}
-			
-		}
-		else {
-			if (pow(center.x - padPosition.x, 2) + pow(center.y - padPosition.y, 2) <= pow(this->shape.getRadius(), 2)) {
-				dir = Normalize(dir);
-				dir.x = -abs(dir.x);
-				dir.y = -dir.y;
-				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
-				}
-				this->velocity = dir * moveSpeed;
-			}
-			else if (pow(center.x - padPosition.x, 2) + pow(center.y - padPosition.y - padSize.y, 2) <= pow(this->shape.getRadius(), 2)) {
-				dir = Normalize(dir);
-				dir.x = -abs(dir.x);
-				dir.y = -dir.y;
-				moveSpeed += 10;
-				if (moveSpeed >= 200) {
-					moveSpeed = 200;
-				}
-				this->velocity = dir * moveSpeed;
-			}
-			
-		}
+		
 		return true;
 	}
 	void draw(sf::RenderWindow *window) {
@@ -223,16 +226,19 @@ public:
 		switch (type)
 		{
 		case 0:
+			this->shape.setFillColor(sf::Color(150, 50, 250));
 			if (dis <= this->getTotalRadius() + ball->shape.getRadius()) {
 				ball->velocity += -Normalize(dir) * 40.0f * deltaTime;
 			}
 			break;
 		case 1:
+			this->shape.setFillColor(sf::Color::Green);
 			if (dis <= this->getTotalRadius() + ball->shape.getRadius()) {
 				ball->velocity += Normalize(dir) * 40.0f * deltaTime;
 			}
 			break;
 		case 2:
+			this->shape.setFillColor(sf::Color::Yellow);
 			if (dis <= this->getTotalRadius() + ball->shape.getRadius()) {
 				ball->velocity = Normalize(dir) * ball->moveSpeed;
 				impact.play();
@@ -379,7 +385,6 @@ int main()
 	sf::Clock clock;
 	float deltaTime = 0.0f;
 	bool offCheck;
-	bool isLeft;
 	bool ball2Existed = false;
 	bool gameStart = true;
 	bool AiEnabled;
@@ -427,15 +432,13 @@ int main()
 					BallCollision(&ball, &ball2);
 				}
 				if (ball.velocity.x > 0) {
-					isLeft = false;
-					offCheck = ball.UpdateBall(deltaTime, pad2.shape.getPosition(), pad2.shape.getSize(), isLeft);
+					offCheck = ball.UpdateBall(deltaTime, pad2.shape.getPosition(), pad2.shape.getSize());
 					if (!offCheck) {
 						scoreL++;
 					}
 				}
 				else {
-					isLeft = true;
-					offCheck = ball.UpdateBall(deltaTime, pad.shape.getPosition(), pad.shape.getSize(), isLeft);
+					offCheck = ball.UpdateBall(deltaTime, pad.shape.getPosition(), pad.shape.getSize());
 					if (!offCheck) {
 						scoreR++;
 					}
@@ -457,15 +460,15 @@ int main()
 					}
 					else {
 						if (ball2.velocity.x > 0) {
-							isLeft = false;
-							offCheck = ball2.UpdateBall(deltaTime, pad2.shape.getPosition(), pad2.shape.getSize(), isLeft);
+							
+							offCheck = ball2.UpdateBall(deltaTime, pad2.shape.getPosition(), pad2.shape.getSize());
 							if (!offCheck) {
 								scoreL++;
 							}
 						}
 						else {
-							isLeft = true;
-							offCheck = ball2.UpdateBall(deltaTime, pad.shape.getPosition(), pad.shape.getSize(), isLeft);
+						
+							offCheck = ball2.UpdateBall(deltaTime, pad.shape.getPosition(), pad.shape.getSize());
 							if (!offCheck) {
 								scoreR++;
 							}
